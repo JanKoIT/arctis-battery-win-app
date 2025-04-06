@@ -11,11 +11,13 @@ const getUnmatchedDevices = (overrideMatches = null) => {
   ) || [
     "steelseries",
     "steel series",
+    "SteelSeries"
   ]
 
   try {
     const attachedDevices = HID_devices()
     for (const attDevice of attachedDevices) {
+      //console.log(attachedDevices)
       try {
         if (stringMatches === "_ALL_") {
           // if (attDevice?.usage !== 1) {
@@ -54,9 +56,15 @@ const getMatchedDevices = () => {
   
       const haveDevice = getDeviceCodes()?.some((knownDevice) => {
         try {
+          // Check if interface requirement exists for this device
+          const interfaceMatch = knownDevice.requiredInterface 
+            ? attDevice.interface === knownDevice.requiredInterface
+            : attDevice?.usage !== 1;
+            
           const match = knownDevice?.vendorId === attDevice?.vendorId
           && knownDevice?.productId === attDevice?.productId
-          && attDevice?.usage !== 1
+          && interfaceMatch
+          
           if (match) {
             kd = knownDevice
           }
@@ -92,11 +100,16 @@ const getDevicesBattery = (devices) => {
         if (!device) return
     
         try {
+          // Use device-specific commands if available, otherwise use default
+          const batteryCommand = d.batteryCommand || [0x06, 0x18];
+          const batteryIndex = d.batteryIndex || 2;
           
-          device.write([0x06, 0x18])
+          device.write(batteryCommand);
+          const response = device.readSync();
+          
           const deviceInfo = {
             device: d.name || d.product,
-            battery: device.readSync()[2]
+            battery: response[batteryIndex]
           }
     
           parsedDevices.push(deviceInfo)
@@ -104,7 +117,7 @@ const getDevicesBattery = (devices) => {
         } catch (e) {
           console.log('connect to device fail', e)
           parsedDevices.push({
-            device: deviceData.name,
+            device: d.name,
             error: true
           })
         }
