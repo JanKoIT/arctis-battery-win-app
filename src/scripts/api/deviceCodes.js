@@ -62,6 +62,14 @@ const deviceCodes = [
     batteryCommand: [0x00, 0xb0],
     batteryIndex: 3
   },
+  {
+    name: "SteelSeries Arctis Nova 5X",
+    vendorId: 4152,
+    productId: 8787,
+    requiredInterface: 3,
+    batteryCommand: [0x00, 0xb0],
+    batteryIndex: 3
+  }
 ]
 function getDeviceCodes() {
   return deviceCodes;
